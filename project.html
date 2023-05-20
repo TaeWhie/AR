@@ -1,0 +1,501 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>tree.js - namecard project</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/105/three.min.js"></script>
+    <script src="https://letsee-dev.s3.ap-northeast-2.amazonaws.com/webar/Letsee.0.9.16.min.js"></script>
+    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script src="js/loaders/FBXLoader.js"></script>
+    <script src="js/loaders/OBJLoader.js"></script>
+    <script src="js/loaders/GLTFLoader.js"></script>
+    <script src="js/libs/inflate.min.js"></script>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
+
+    <style media="place" type="text/css">
+        #container {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(0, 0, 0);
+        }
+
+        .letter-button {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(0, -50, 0);
+            color: #009688;
+            background: #fff;
+            border: 1px solid #009688;
+            font-size: 17px;
+            padding: 7px 12px;
+            font-weight: normal;
+            margin: 6px 0;
+            margin-right: 12px;
+            display: inline-block;
+            text-decoration: none;
+            font-family: 'Open Sans', sans-serif;
+            min-width: 120px;
+        }
+
+        .web-button {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(0, 70, 0);
+        }
+
+        .tel-button {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(50, 70, 0);
+        }
+
+        .mail-button {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(-50, 70, 0);
+        }
+
+        .left-button {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(-80, 70, 0);
+            visibility: hidden;
+        }
+
+        .right-button {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(80,70, 0);
+            visibility: hidden;
+        }
+
+        .on-button {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(-100, 0, 0);
+        }
+
+        .off-button {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(-100, 0, 0);
+            visibility: hidden;
+        }
+
+        .right-rot-button {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(40, 70, 0);
+            visibility: hidden;
+        }
+
+        .left-rot-button {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(-40, 70, 0);
+            visibility: hidden;
+        }
+
+        .now-show {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(0, 80, 0);
+            font-size: large;
+            font-weight: 600;
+            visibility: hidden;
+        }
+
+        .add-button {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(-100, 70, 0);
+            visibility: visible;
+        }
+
+        #loading-overlay {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(0, 0, 0);
+            width: 30%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            visibility: hidden;
+            font-size: 10px;
+        }
+
+        #loading-bar {
+            width: 25em;
+            height: 1em;
+            border-radius: 0.25em;
+            background-color: black;
+            border: 1px solid grey;
+            display: inline-flex;
+        }
+
+        #progress {
+            background-color: #75b800;
+            height: inherit;
+            border-radius: inherit;
+            width: 5%;
+        }
+
+        .annotation {
+            -letsee-target: uri('namecard.json');
+            -letsee-position: coords(150,10,0);
+            top: 0;
+            left: 0;
+            z-index: 1;
+            margin-left: 15px;
+            margin-top: 15px;
+            padding: 1em;
+            width: 120px;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 0.5em;
+            font-size: 8px;
+            line-height: 1.2;
+            transition: opacity 0.5s;
+            visibility: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="debug_div"> </div>
+    <div id="loading-overlay">
+        <strong>Loading...</strong>
+        <div id="loading-bar">
+            <span id="progress"></span>
+        </div>
+    </div>
+    <a href="https://www.google.com/" class="web-button" target="_blank"><img src="./Internet.png" width="45" height="45"> </a>
+    <div onclick="location.href='tel:010-1234-5678'" class="tel-button" target="_blank"><img src="./Phone.png" width="45" height="45"></div>
+    <div onclick="location.href='mailto:letsee@naver.com'" class="mail-button" target="_blank"><img src="./mail.png" width="40" height="40"></div>
+    <div onclick="left_click();" class="left-button" target="_blank"><img src="./left.png" width="40" height="40"></div>
+    <div onclick="right_click();" class="right-button" target="_blank"><img src="./right.png" width="40" height="40"></div>
+    <div onmousedown="left_rot_click();" class="left-rot-button" target="_blank"><img src="./left_rot.png" width="40" height="40"></div>
+    <div onmousedown="right_rot_click();" class="right-rot-button" target="_blank"><img src="./right_rot.png" width="40" height="40"></div>
+    <div onclick="on_click();" class="on-button" target="_blank"><img src="./On.png" width="45" height="45"></div>
+    <div onclick="off_click();" class="off-button" target="_blank"><img src="./Off.png" width="45" height="45"></div>
+    <div onclick="add_click();" class="add-button" target="_blank"><img src="./add.png" width="45" height="45"></div>
+
+    <div class="now-show"></div>
+    <div class="annotation">
+        <p><strong>Cube</strong></p>
+        <p>In geometry, a cube is a three-dimensional solid object bounded by six square faces, facets or sides, with three meeting at each vertex.</p>
+    </div>
+    <br />
+    <div id="container"></div>
+
+    <script>
+        const config = {
+        "appKey": "Tb8arp5eF9ZMDw0u2QiOyV845R61eltmeZQKwFBXBeeNU9Q5vgpduQdF5oipQX9X",
+        "trackerType": "PLANAR"
+        };
+        const app = new Letsee(config);
+        app.addEventListener('app_status', e => {
+        console.log(e);
+        switch (e.code) {
+        case 202:
+        init();
+        break;
+        }
+        });
+
+        const clock = new THREE.Clock();
+        // const loader = new THREE.FBXLoader();
+        var group = new THREE.Group();
+        var geometry = new THREE.PlaneGeometry(200, 200, 0.1);
+        var video_geometry = new THREE.PlaneGeometry(160,90,0.1);
+        var material = new THREE.MeshLambertMaterial({ color: 0x0011ff });
+        var texture = new THREE.TextureLoader().load('./logo.png');
+        var logomat = new THREE.MeshBasicMaterial({ map: texture });
+        var plane = new THREE.Mesh(geometry, logomat);
+        let mixer;
+
+        var onoff = false;
+        var add_onoff=false;
+        var loading = false;
+
+        video = document.createElement( 'video' );
+
+        video.src = "./company.mp4";
+        video.load();
+        video.play();
+
+
+
+        videoImage = document.createElement( 'canvas' );
+        videoImage.width = 640;
+        videoImage.height = 360;
+        videoImageContext = videoImage.getContext( '2d' );
+
+        videoImageContext.fillStyle = '#000000';
+        videoImageContext.fillRect( 0, 0, videoImage.width, videoImage.height );
+        videoTexture = new THREE.Texture( videoImage );
+        videoTexture.minFilter = THREE.LinearFilter;
+        videoTexture.magFilter = THREE.LinearFilter;
+
+        var movieMaterial = new THREE.MeshBasicMaterial( { map: videoTexture, overdraw: true, side:THREE.DoubleSide } );
+        
+        var v_plane= new THREE.Mesh(video_geometry,movieMaterial);
+
+        var source = new Array();
+        source[0] = './models/gltf/new/newwww.gltf';
+        source[1] = './models/fbx/Low-Poly-Racing-Car.fbx';
+
+        var nowshow = 0;
+        let mixer;
+
+        app.addEventListener('trackstart', e => {
+
+
+        });
+        app.addEventListener('trackmove', e => {
+
+        document.querySelector(".now-show").innerHTML = nowshow + 1 + "/" + source.length;
+
+        });
+        function init() {
+        const renderer = app.engine.threeRenderer;
+        const camera = renderer.camera;
+        const scene = renderer.scene;
+        let light;
+
+        light = new THREE.HemisphereLight(0xffffff, 0x444444);
+        light.position.set(0, 200, 0);
+        scene.add(light);
+
+        light = new THREE.DirectionalLight(0xffffff);
+        light.position.set(0, 200, 100);
+        light.castShadow = true;
+        light.shadow.camera.top = 180;
+        light.shadow.camera.bottom = - 100;
+        light.shadow.camera.left = - 120;
+        light.shadow.camera.right = 120;
+        scene.add(light);
+
+        renderer.addObjectToEntity('namecard.json', group);
+        animate();
+        }
+        function animate() {
+        const delta = clock.getDelta();
+
+        if (mixer) mixer.update(delta);
+
+        if ( video.readyState === video.HAVE_ENOUGH_DATA )
+        {
+        videoImageContext.drawImage( video, 0, 0 );
+        if ( videoTexture )
+        videoTexture.needsUpdate = true;
+        }
+
+        requestAnimationFrame(animate);
+        }
+
+        function on_click() {
+
+        if (onoff == false) {
+        onoff = true;
+        //Loadsource(source[nowshow]);
+        Loadgltf(source[nowshow]);
+        }
+        }
+        function off_click() {
+        if (loading == false) {
+        onoff = false;
+
+        document.querySelector(".right-button").style.visibility = "hidden";
+        document.querySelector(".left-rot-button").style.visibility = "hidden";
+        document.querySelector(".right-rot-button").style.visibility = "hidden";
+        document.querySelector(".left-button").style.visibility = "hidden";
+        document.querySelector(".off-button").style.visibility = "hidden";
+        document.querySelector(".web-button").style.visibility = "visible";
+        document.querySelector(".add-button").style.visibility = "visible";
+        document.querySelector(".mail-button").style.visibility = "visible";
+        document.querySelector(".tel-button").style.visibility = "visible";
+        document.querySelector(".on-button").style.visibility = "visible";
+        document.querySelector(".now-show").style.visibility = "hidden";
+        document.querySelector(".annotation").style.visibility = "hidden";
+        group.remove(group.children[1], plane);
+        }
+
+        }
+
+        function Loadsource(source) {
+        const manager = initLoadingManager();
+        const loader = new THREE.FBXLoader(manager);
+        document.querySelector("#loading-overlay").style.visibility = "visible";
+        loader.load(source, function (object) {
+        document.querySelector(".right-button").style.visibility = "visible";
+        document.querySelector(".left-button").style.visibility = "visible";
+        document.querySelector(".right-rot-button").style.visibility = "visible";
+        document.querySelector(".left-rot-button").style.visibility = "visible";
+        document.querySelector(".web-button").style.visibility = "hidden";
+        document.querySelector(".add-button").style.visibility = "hidden";
+        document.querySelector(".mail-button").style.visibility = "hidden";
+        document.querySelector(".tel-button").style.visibility = "hidden";
+        document.querySelector(".off-button").style.visibility = "visible";
+        document.querySelector(".on-button").style.visibility = "hidden";
+        document.querySelector(".now-show").style.visibility = "visible";
+        document.querySelector(".annotation").style.visibility = "visible";
+        group.add(plane);
+        group.add(object);
+
+        plane.rotation.set(30, 0, 0);
+        plane.position.y = -30;
+        object.position.y = -30;
+        object.scale.set(0.5, 0.5, 0.5);
+
+         video.pause();
+         video.currentTime = 0;
+         group.remove(v_plane);
+        }, manager.onProgress, manager.onError);
+        }
+
+        function Loadgltf(source)
+        {
+        const manager = initLoadingManager();
+        const loader = new THREE.GLTFLoader(manager);
+        document.querySelector("#loading-overlay").style.visibility = "visible";
+        loader.load(source, function (object) {
+        document.querySelector(".right-button").style.visibility = "visible";
+        document.querySelector(".left-button").style.visibility = "visible";
+        document.querySelector(".right-rot-button").style.visibility = "visible";
+        document.querySelector(".left-rot-button").style.visibility = "visible";
+        document.querySelector(".web-button").style.visibility = "hidden";
+        document.querySelector(".add-button").style.visibility = "hidden";
+        document.querySelector(".mail-button").style.visibility = "hidden";
+        document.querySelector(".tel-button").style.visibility = "hidden";
+        document.querySelector(".off-button").style.visibility = "visible";
+        document.querySelector(".on-button").style.visibility = "hidden";
+        document.querySelector(".now-show").style.visibility = "visible";
+        document.querySelector(".annotation").style.visibility = "visible";
+
+           if (gltf.animations.length) {
+                    mixer = new THREE.AnimationMixer(gltf.scene);
+                    for (i = 0; i < 6; i++) {
+                        let action = mixer.clipAction(gltf.animations[i]);
+                        action.play();
+                    }
+                }
+           
+                gltf.scene.traverse(function (child) {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+                gltf.scene.scale.setScalar(140);
+
+        group.add(plane);
+        group.add(object);
+
+        plane.rotation.set(30, 0, 0);
+        plane.position.y = -30;
+        object.position.y = -30;
+        object.scale.set(0.5, 0.5, 0.5);
+
+         video.pause();
+         video.currentTime = 0;
+         group.remove(v_plane);
+        }, manager.onProgress, manager.onError);
+        }
+
+
+        function right_click() {
+        if (loading == false) {
+        group.remove(group.children[1]);
+        if (nowshow == source.length - 1) { nowshow = 0; }
+        else { nowshow += 1; }
+        loading = true;
+        Loadsource(source[nowshow]);
+        }
+        }
+        function left_click() {
+        if (loading == false) {
+        group.remove(group.children[1]);
+        if (nowshow == 0) { nowshow = source.length - 1; }
+        else { nowshow -= 1; }
+        loading = true;
+        Loadsource(source[nowshow]);
+        }
+        }
+        function right_rot_click() {
+        group.children[1].rotation.y += 0.2;
+        }
+        function add_click() {
+        if(add_onoff==false)
+        {  add_onoff=true;  
+        group.add(v_plane);
+        video.play();}
+      
+        else
+        {
+         video.pause();
+         video.currentTime = 0;
+         group.remove(v_plane);
+        add_onoff=false;
+        }
+        }
+        function left_rot_click() {
+        group.children[1].rotation.y -= 0.2;
+        }
+        function initLoadingManager() {
+
+        const manager = new THREE.LoadingManager();
+        const progressBar = document.querySelector('#progress');
+        const loadingOverlay = document.querySelector('#loading-overlay');
+
+        let percentComplete = 1;
+        let frameID = null;
+
+        const updateAmount = 0.5; // in percent of bar width, should divide 100 evenly
+
+        const animateBar = () => {
+        percentComplete += updateAmount;
+
+        // if the bar fills up, just reset it.
+        // I'm changing the color only once, you
+        // could get fancy here and set up the colour to get "redder" every time
+        if (percentComplete >= 100) {
+
+        // progressBar.style.backgroundColor = 'blue'
+        // percentComplete = 1;
+
+
+        }
+
+        progressBar.style.width = percentComplete + '%';
+
+        frameID = requestAnimationFrame(animateBar)
+
+        }
+
+        manager.onStart = () => {
+
+        // prevent the timer being set again
+        // if onStart is called multiple times
+        if (frameID !== null) return;
+
+        animateBar();
+
+        };
+
+        manager.onLoad = function () {
+
+        //loadingOverlay.classList.add('loading-overlay-hidden');
+
+        // reset the bar in case we need to use it again
+        percentComplete = 0;
+        progressBar.style.width = 0;
+        cancelAnimationFrame(frameID);
+
+        document.querySelector("#loading-overlay").style.visibility = "hidden";
+        loading = false;
+        };
+
+        manager.onError = function (e) {
+
+        console.error(e);
+
+
+
+        }
+
+        return manager;
+        }
+
+    </script>
+
+</body>
+</html>
